@@ -1,0 +1,4 @@
+.idea
+.adtenv
+.docker-compose.yaml
+.data/tweets.backup
