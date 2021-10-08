@@ -72,3 +72,14 @@ VALUES ('DeepstateVirus', 4),
 	   ('flatEarth', 15),
 	   ('illuminati', 16),
 	   ('reptilians', 17)
+
+
+CREATE TABLE tweets_themes(
+	theme_id INT,
+	tweet_id varchar(20),
+ 	CONSTRAINT fk_theme
+		FOREIGN KEY(theme_id)
+		REFERENCES conspiracy_themes(theme_id),
+ 		FOREIGN KEY (tweet_id)
+ 		REFERENCES conspiracy_tweets(id)
+)
