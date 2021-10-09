@@ -22,3 +22,19 @@ WHERE tweets.id IN (
 )
 
 -- ULOHA 2
+
+
+
+-- ULOHA 6
+
+-- top10 hashtag ids for theory
+SELECT th.hashtag_id, COUNT(th.hashtag_id) FROM tweet_hashtags th WHERE th.tweet_id IN (
+    -- tweets ids with extreme sentiments for theory
+    SELECT cts.id FROM conspiracy_tweet_sentiments cts
+    WHERE cts.id IN (
+        -- tweet ids for theme
+        SELECT tt.tweet_id FROM tweets_themes tt WHERE tt.theme_id = 12
+    ) AND cts.compound NOT BETWEEN -0.5 AND 0.5
+)
+GROUP BY th.hashtag_id
+ORDER BY COUNT(th.hashtag_id) DESC LIMIT 10
