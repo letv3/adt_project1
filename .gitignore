@@ -2,3 +2,4 @@
 .adtenv
 .docker-compose.yaml
 .data/tweets.backup
+.task2/img*

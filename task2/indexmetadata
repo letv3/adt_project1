@@ -1,0 +1,32 @@
+CREATE EXTENSION pageinspect;
+
+
+select * from bt_metap('retweet_count_idx') as rci 
+union all
+select * from bt_metap('content_idx') as ci
+union all
+select * from bt_metap('name_idx') as ci 
+union all
+select * from bt_metap('friends_count_idx') as ci
+union all
+select * from bt_metap('description_idx') as ci;
+
+
+
+select type, live_items, dead_items, avg_item_size, page_size, free_size 
+	from bt_page_stats('content_idx',1000)
+UNION ALL
+select type, live_items, dead_items, avg_item_size, page_size, free_size 
+	from bt_page_stats('retweet_count_idx',1000)
+UNION ALL
+select type, live_items, dead_items, avg_item_size, page_size, free_size 
+	from bt_page_stats('name_idx',1000)
+UNION ALL
+select type, live_items, dead_items, avg_item_size, page_size, free_size 
+	from bt_page_stats('friends_count_idx',1000)
+UNION ALL
+select type, live_items, dead_items, avg_item_size, page_size, free_size 
+	from bt_page_stats('description_idx',1000)
+
+
+ select * from bt_page_items('content_idx',1) limit 1000

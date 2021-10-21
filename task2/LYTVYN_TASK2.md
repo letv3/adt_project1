@@ -1,0 +1,43 @@
+# PDT2021 Zadanie 2
+## Oleksandr Lytvyn
+
+1. V tomto selecte DBMS engine spravil vyhladavani pomocou sekvencneho skenu. Spravil to preto 
+ze udaj v tabulke nie su rozsortovane + nie je implementovana ziadna metoda na jednoznacne porovnanie
+doch prvkov
+![img.png](img.png)
+2. 1 worker pracoval na tomto selecte (1145ms). Pri zvacseni poctu workerov na 2 pomocou 
+`max_parallel_workers_per_gather` a tym padom sa zrychlilo vykonavanie dopytu o 292 ms (858ms). Pri nalsedovnom zvacseni
+poctu workerov cas dopytu sa vyrazne nemeni do 3 a 4 execution time sa znizoval - 801ms a 796ms. Pri dalsom zvaceni poctu 
+workerov execution time zacal stupa 5-829,6 - 834. Pricinou toho je pocet jadier na PC, co je 4. Tak ze optimalnym poctom
+workerov je 4.
+![img_1.png](img_1.png)
+3. Cas oproti pozidaviek bez index sa vyrazne zmenil (796ms -> 0.092ms). Pri zvaceni poctu na 4 workerov execution time sa 
+zmensil na 0.043ms (planning time: 0.114). V tejto poziadavne planovac nepotrebuje zvacsenie poctu workrev (rychlost sa 
+zvacsuje nevyrazne). Vytvorenie indexu sortuje data, a preto pomocou Btree algotirhmu vieme rychlos dostat vysledok.
+![img_2.png](img_2.png)
+![img_3.png](img_3.png)
+4. Spravanie je rovnake ako v 1 ulohe (resp. Seq Scan). Preto ze sme vytvorili index iba na jeden stlpec('screen_name').
+Index na stlpec folowers_count nemame :(, zatial
+![img_4.png](img_4.png)
+5. Najprv planovac prejede kazdy potrebny zaznam (ktory vyhovuje podmienke) a potom spravi recheck, 
+aby overit spravnost operacie. Potom sa zobrazil pocet blockov ktore ktore boli navsteveni (visited) a nie su lossy.
+Potom sa Vykona BitmapIndexScan a ked sa vyskytne index ktory vyhovuje podmienke hladania, sa najde heap address na 
+ktory ukazuje index ako offset v bitmap a tento bit zmenime na 1. Recheck condition je tam preto ze pri BitmapHeapScan
+bitmap riadkov pri velkych tabulkach sa nezmesti do pamate, a preto uklada bitmap blockov, a tym padom stava lossy.
+![img_5.png](img_5.png)
+6. Rozdiel je v tom ze v tomto dopyte sa vykonal iba skvencny sken tabulky. Pri selektovani vacsieho poctu riadko z 
+tabulky planovac sa rozhodne rovno precita celu tabulky, co bude rychlejsie nez proces z minulej otazky.
+![img_6.png](img_6.png)
+7. Vytorenie indexov trvalo 2min12s, insert trval 56ms. Opakovane vytvorenie indexov trvalo 2min17s. Skusil som to
+to spravit este raz, vysledky boli rovnake, vytvorenie + insert: 2min12sec a vytvorenie po dropnuti: 2min13sec. Trva 
+to o 1 sekundu dlhsie kvoli to ze bol pridany jeden zaznam? 
+8. Dlzka vytvorenia indexu pre retweet_count - 35s228ms, Dlzka vytvorenia indexu pre contex_idx - 5min27s
+Rozdiel v case vytvarania indexov je sposobeny tym ze tweet_count su hodnoty int, a content je string 
+(porovnovanie string je narocnejsie operacia nez porovnanie int) Dlzka vytvorenie indexu zalezi od typu, velkosti a poctu 
+hodnot nad ktorymi vytvarame index
+9. Tabulky pre porovnanie indexov v poradi: retweet_count, content, name, friends_count, description
+![img_7.png](img_7.png)
+
+![img_8.png](img_8.png)
+
+10.
