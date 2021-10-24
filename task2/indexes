@@ -1,0 +1,34 @@
+CREATE INDEX screen_name_char_idx ON accounts (screen_name varchar_pattern_ops);
+
+
+CREATE INDEX screen_name_idx ON accounts (screen_name text_pattern_ops);
+DROP INDEX screen_name_idx;
+
+CREATE INDEX screen_name_gin_idx ON accounts 
+USING GIN (to_tsvector('english',screen_name));
+DROP INDEX screen_name_gin_idx;
+
+
+CREATE EXTENSION  pg_trgm;
+CREATE EXTENSION btree_gin;
+CREATE INDEX screen_name_trgm_idx ON accounts USING GIN (screen_name gin_trgm_ops);
+
+
+ALTER TABLE accounts 
+	ADD COLUMN text_search_desc_name tsvector
+		GENERATED ALWAYS AS 
+		(to_tsvector('english', coalesce(name, '') || ' ' || coalesce(description,''))) STORED;
+	
+
+CREATE INDEX description_name_accs_idx ON accounts USING GIN (to_tsvector('english', name || ' ' || description))
+
+CREATE INDEX content_gin_idx ON tweets USING GIN (to_tsvector('english', content))
+
+CREATE INDEX author_id_idx on tweets (author_id)
+
+CREATE INDEX description_name_id_accs_idx ON accounts USING GIN (to_tsvector('english', name || ' ' || description), id)
+
+
+CREATE INDEX content_idx on tweets (content text_pattern_ops);
+CREATE INDEX friends_count_idx on accounts (friends_count);
+
