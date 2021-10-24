@@ -1,6 +1,9 @@
 # PDT2021 Zadanie 2
 ## Oleksandr Lytvyn
 
+git: [https://github.com/letv3/adt_project1/blob/main/task2/LYTVYN_TASK2.md](git)
+V adresare _'task2'_ su aj subry zo indexami a selectami.
+
 1. V tomto selecte DBMS engine spravil vyhladavani pomocou sekvencneho skenu. Spravil to preto 
 ze udaj v tabulke nie su rozsortovane + nie je implementovana ziadna metoda na jednoznacne porovnanie
 doch prvkov
