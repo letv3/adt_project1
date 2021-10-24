@@ -155,7 +155,7 @@ to nie nas pripad. Operacia nad viaceremi tabulkamy vyzaduje ovela viac casu a p
 
 ![img_21.png](img_21.png)
 
-UPD NEDELA(24.10.21) 12.30(obed) (subor uz nahraty do asi a odovzdany, iba commit na git)
+UPD NEDELA(24.10.21) 12.40(obed) (subor uz nahraty do asi a odovzdany, iba commit na git)
 Premislel tuto ulohu este raz. a teda som spravil este jeden btree index na author_id 
 
 `CREATE INDEX author_id_idx on tweets (author_id)`

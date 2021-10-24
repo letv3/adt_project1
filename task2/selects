@@ -27,14 +27,17 @@ ORDER BY tweets.retweet_count DESC
 
 
 -- ver3
-SELECT * FROM tweets
-JOIN accounts ON tweets.author_id=accounts.id
-WHERE to_tsvector('english', tweets.content) @@ to_tsquery('John | Oliver')
+SELECT t1.id, t1.content, t1.retweet_count as retweet_count, t1.author_id, 
+a1.id, a1.name, a1.description
+FROM tweets t1
+JOIN accounts a1 ON t1.author_id=a1.id
+WHERE to_tsvector('english', t1.content) @@ to_tsquery('John | Oliver')
 UNION
-SELECT * FROM tweets 
-JOIN accounts ON tweets.author_id=accounts.id 
-WHERE to_tsvector('english', accounts.name || ' ' || accounts.description) @@ to_tsquery('John | Oliver')
--- ORDER BY tweets.retweet_count DESC
+SELECT t2.id, t2.content, t2.retweet_count as retweet_count, t2.author_id,
+a2.id, a2.name, a2.description FROM tweets t2
+JOIN accounts a2 ON t2.author_id=a2.id 
+WHERE to_tsvector('english', a2.name || ' ' || a2.description) @@ to_tsquery('John | Oliver')
+ORDER BY retweet_count DESC
 
 
 

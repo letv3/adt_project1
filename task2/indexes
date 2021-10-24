@@ -26,7 +26,7 @@ CREATE INDEX content_gin_idx ON tweets USING GIN (to_tsvector('english', content
 
 CREATE INDEX author_id_idx on tweets (author_id)
 
-CREATE INDEX description_name_id_accs_idx ON accounts USING GIN (to_tsvector('english', name || ' ' || description), id)
+-- CREATE INDEX description_name_id_accs_idx ON accounts USING GIN (to_tsvector('english', name || ' ' || description), id)
 
 
 CREATE INDEX content_idx on tweets (content text_pattern_ops);
