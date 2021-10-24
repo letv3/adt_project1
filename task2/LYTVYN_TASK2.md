@@ -154,3 +154,30 @@ casti statementu nezavisle. OR teoreticky by som vediel pouzit, ked vykonavali o
 to nie nas pripad. Operacia nad viaceremi tabulkamy vyzaduje ovela viac casu a pamate na vypocet.
 
 ![img_21.png](img_21.png)
+
+UPD NEDELA(24.10.21) 12.30(obed) (subor uz nahraty do asi a odovzdany, iba commit na git)
+Premislel tuto ulohu este raz. a teda som spravil este jeden btree index na author_id 
+
+`CREATE INDEX author_id_idx on tweets (author_id)`
+
+a trochu som upravil aj query, co je lepsi a rychlejsi sposob:
+
+    SELECT t1.id, t1.content, t1.retweet_count as retweet_count, t1.author_id,
+    a1.id, a1.name, a1.description
+    FROM tweets t1
+    JOIN accounts a1 ON t1.author_id=a1.id
+    WHERE to_tsvector('english', t1.content) @@ to_tsquery('John & Oliver')
+    UNION
+    SELECT t2.id, t2.content, t2.retweet_count as retweet_count, t2.author_id,
+    a2.id, a2.name, a2.description FROM tweets t2
+    JOIN accounts a2 ON t2.author_id=a2.id 
+    WHERE to_tsvector('english', a2.name || ' ' || a2.description) @@ to_tsquery('John & Oliver')
+    ORDER BY retweet_count DESC
+
+Cas vykonanie tejto query je 50-100ms, co je celkom rychle. a vratilo 625 riadkov. Ne bol som isty 
+ci mam pouzit & alebo | v to_tsquery (John | Oliver alebo John & Oliver), a preto som spustil tuto query aj tak, aj tak. 
+S 'John | Oliver' operatorom v to_tsquery to trvalo 4 sekundy a postup bol ten isty.
+
+![img_22.png](img_22.png)
+
+
