@@ -1,0 +1,179 @@
+-- 2
+SELECT t.name as Kraj , ST_AsText(st_setsrid(t.way, 4326)::geography) as Suradnice FROM planet_osm_polygon t WHERE admin_level = '4'
+
+-- 3
+
+SELECT t.name as Kraj, 
+	   t.way_area as Rozloha,
+	   st_area(t.way) as Rozloha_geometry,
+	   st_area(st_transform(t.way, 4326)::geography, true)/1000000 as Rozloha_geography
+FROM planet_osm_polygon t 
+WHERE admin_level = '4' ORDER BY Rozloha_geography DESC
+
+-- 4
+INSERT INTO planet_osm_polygon(osm_id, "addr:housenumber", building, way)
+VALUES (9999999999, 53, 'mladost', (st_geomfromtext('POLYGON((17.0631661 48.1595083, 17.0633672 48.1590413, 17.0634719 48.159061, 17.0635362 48.1588982, 17.0636194 48.1589161, 17.0636703 48.1587801, 17.0644535 48.1589179, 17.0643972 48.1590574, 17.0644723 48.1590718, 17.064416 48.1592578, 17.0643194 48.1592489, 17.0642631 48.1593956, 17.064188 48.1593884, 17.0641317 48.1595405, 17.0640378 48.159528, 17.0639788 48.1596765, 17.0631661 48.1595083))', 3857)))
+
+SELECT st_setsrid(t.way, 4326) FROM planet_osm_polygon t WHERE building = 'mladost'
+
+DELETE FROM planet_osm_polygon WHERE osm_id = 9999999999
+-- 5 
+
+SELECT t.name
+FROM planet_osm_polygon t
+WHERE st_contains(st_transform(t.way, 4326), (SELECT st_setsrid(tb.way, 4326) FROM planet_osm_polygon tb WHERE tb.building = 'mladost')) and t.admin_level = '4' 
+
+-- 6
+
+INSERT INTO planet_osm_point(osm_id, name, way)
+VALUES (0000000000, 'actual_position', st_makepoint(17.1258558, 48.1433749)) --real position
+
+INSERT INTO planet_osm_point(osm_id, name, way)
+VALUES (9999999999, 'home_position', st_makepoint(17.0640349, 48.1588899)) --home position
+
+SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'actual_position'
+
+-- 7
+SELECT st_contains((SELECT st_setsrid(tb.way, 4326) FROM planet_osm_polygon tb WHERE tb.building = 'mladost'), (SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'actual_position')) as som_doma
+SELECT st_contains((SELECT st_setsrid(tb.way, 4326) FROM planet_osm_polygon tb WHERE tb.building = 'mladost'), (SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'home_position'))
+
+-- 8
+
+SELECT st_distance((SELECT st_transform(way, 4326) FROM planet_osm_polygon WHERE name = 'Fakulta informatiky a informačných technológií STU')::geography, (SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'actual_position')::geography)
+
+
+-- 9 
+CREATE TABLE okresy_a_dom (
+	osm_id BIGINT PRIMARY KEY,
+	name TEXT,
+	way GEOMETRY
+)
+
+INSERT INTO okresy_a_dom (osm_id, name, way)
+SELECT t.osm_id, t.name ,st_transform(t.way, 4326) FROM planet_osm_polygon t WHERE admin_level = '4'
+UNION ALL
+SELECT t.osm_id, t.building ,st_setsrid(t.way, 4326) FROM planet_osm_polygon t WHERE t.building = 'mladost'
+
+
+SELECT * FROM okresy_a_dom
+
+
+-- 10
+
+SELECT t.name as Kraj,
+	   st_area(st_transform(t.way, 4326)::geography, true)/1000000 as Rozloha_geography,
+	   ST_Centroid(st_transform(t.way, 4326)) as centroid,
+	   st_astext(ST_Centroid(st_transform(t.way, 4326))) as centroid_coordinates
+FROM planet_osm_polygon t 
+WHERE admin_level = '4' ORDER BY Rozloha_geography ASC LIMIT 1
+
+
+-- 11
+CREATE TABLE nearest_roads ( 
+	osm_id BIGINT,
+	road GEOMETRY,
+	distance_from_centroid DOUBLE PRECISION
+)
+
+INSERT INTO nearest_roads (osm_id, distance_from_centroid, road)
+SELECT * FROM (
+	SELECT  r.osm_id, 
+	st_distance(
+		st_transform(r.way, 4326)::geography, 
+		(SELECT st_intersection(
+			(SELECT st_transform(way, 4326) 
+			 FROM planet_osm_polygon t 
+			 WHERE (name LIKE '%Malack%') and admin_level = '8' ),
+			(SELECT st_transform(way, 4326) 
+			 FROM planet_osm_polygon t 
+			 WHERE (name LIKE '%Pezinok%') and admin_level = '8'))::geography
+	))/1000 as distance,
+	st_transform(r.way, 4326)
+	FROM planet_osm_roads r
+) as t WHERE distance < 10 
+
+SELECT * FROM nearest_roads
+
+-- 12
+CREATE TABLE ku_with_longest_road_all_roads (
+	id INT,
+	name VARCHAR(50),
+	geom GEOMETRY
+)
+
+CREATE TABLE ku_with_longest_road_highway_motorcar (
+	id INT,
+	name VARCHAR(50),
+	geom GEOMETRY
+)
+
+INSERT INTO ku_with_longest_road_highway_motorcar (
+	id, name, geom
+)
+SELECT idn5, nm5, st_transform(geom, 4326) FROM ku_0 
+WHERE st_intersects(st_transform(geom, 4326),
+					   (-- select longest road in the okres where I live
+						SELECT st_transform(r.way, 4326) as road
+						FROM planet_osm_roads r 
+						WHERE st_within(st_transform(r.way, 4326),
+										-- select okres where I live
+										(SELECT st_transform(t.way, 4326) FROM planet_osm_polygon t
+										 WHERE admin_level = '8' 
+										 AND st_contains (st_transform(t.way, 4326),
+														 (SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'home_position'))
+										)
+									   )
+ 					  	AND highway IS NOT Null or motorcar IS NOT Null 
+						ORDER BY st_length(st_transform(r.way, 4326)::geography) DESC
+						LIMIT 1)
+				   )
+
+
+
+-- select longest road in the okres where I live
+SELECT st_length(st_transform(r.way, 4326)::geography)/1000 as length, st_transform(r.way, 4326) as road
+FROM planet_osm_roads r 
+WHERE st_within(st_transform(r.way, 4326),
+				-- select okres where I live
+			   	(SELECT st_transform(t.way, 4326) FROM planet_osm_polygon t
+				 WHERE admin_level = '8' 
+				 AND st_contains (st_transform(t.way, 4326),
+			    				 (SELECT st_setsrid(way, 4326) FROM planet_osm_point WHERE name = 'home_position'))
+			   	)
+) AND 
+ORDER BY length DESC
+LIMIT 1 
+
+SELECT * FROM planet_osm_roads WHERE highway IS NOT Null LIMIT 10
+
+-- 13
+CREATE TABLE buffer_bratislava (
+	id INT,
+	area DOUBLE PRECISION,
+	geom GEOMETRY
+)
+INSERT INTO buffer_bratislava (
+	id, geom
+)
+VALUES(1, 
+	(SELECT st_difference(
+		(SELECT st_intersection(
+			(SELECT  st_transform(t.way, 4326) 
+			 FROM planet_osm_polygon t 
+			 WHERE admin_level = '2'),
+			(st_buffer((SELECT st_transform(t.way, 4326)::geography 
+						FROM planet_osm_polygon t
+						WHERE name LIKE 'Bratislava%' and admin_level = '6'), 20*1000)::geometry)
+			)
+		), 
+		(SELECT st_transform(t.way, 4326) 
+		 FROM planet_osm_polygon t
+		 WHERE name LIKE 'Bratislava%' and admin_level = '6'))
+	)
+)
+
+UPDATE buffer_bratislava SET area = (SELECT st_area(b.geom::geography)/1000000 FROM buffer_bratislava b WHERE id = 1)
+WHERE id=1
+
+SELECT * FROM buffer_bratislava
+-- other
