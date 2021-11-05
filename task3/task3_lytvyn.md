@@ -6,11 +6,15 @@ git: [https://github.com/letv3/adt_project1/blob/main/task3/task3_lytvyn.md](git
 v tomto adresare sa nachadza aj subor s sql dopytami
 
 **2.** Pomocou tochto prikazu som zistil ake su kraje na Slovensku a vypisal teda ich suradnice
-    ```sql
-    SELECT t.name as Kraj , st_astext(st_setsrid(t.way, 4326)::geography) as Suradnice 
+
+```sql
+SELECT t.name as Kraj , st_astext(st_setsrid(t.way, 4326)::geography) as Suradnice 
     FROM planet_osm_polygon t 
     WHERE admin_level = '4'
-    ```
+```
+    
+
+
    ![img.png](img.png)
 
 **3.** V tejto ulohe som mal vypocitat areu kazdeho okresu a zobrazit v km^2 v SRID 4326. Tym ze st_area
