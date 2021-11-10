@@ -183,6 +183,13 @@ potom som odfiltroval iba pre highway alebo motorcar.
 **13.** V tejto ulohe som mal vytvorit polygon okolo 20km vzdialenost od Bratislavy a najt jeho vymeru,
 pri tom ten polygon mal byt iba na uzmei Sloveska.
    ```sql
+    CREATE TABLE buffer_bratislava(
+       id   INT,
+       area DOUBLE PRECISION,
+       geom GEOMETRY
+    );
+    
+
    SELECT st_difference(
         (SELECT st_intersection(
             (SELECT  st_transform(t.way, 4326) 
@@ -195,7 +202,12 @@ pri tom ten polygon mal byt iba na uzmei Sloveska.
         ), 
         (SELECT st_transform(t.way, 4326) 
          FROM planet_osm_polygon t
-         WHERE name LIKE 'Bratislava%' and admin_level = '6'))
+         WHERE name LIKE 'Bratislava%' and admin_level = '6'));
+
+    UPDATE buffer_bratislava SET area = (SELECT st_area(b.geom::geography)/1000000 FROM buffer_bratislava b WHERE id = 1)
+    WHERE id=1;
+    
+    SELECT * FROM buffer_bratislava
    ```
 
    Vyzera tento polygon takto:
@@ -204,6 +216,11 @@ pri tom ten polygon mal byt iba na uzmei Sloveska.
 
    a ma plochu: 1480.121 km^2
 
+   ![img_16.png](img_16.png)
+
 PS: Pekne a Zajumave zadanie, zase. Uz sa tesim na buduce :)
+
+PS2: som pridal ku textiaku aj prikazy na vytvorenie tabulky, a na vypocet plochy (som to mal aj pred terminom, 
+len ze zabudol sem hodit)
    
       
