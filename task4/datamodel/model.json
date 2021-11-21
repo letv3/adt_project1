@@ -1,0 +1,28 @@
+{
+  "tweet0":{
+    "tweet_id": "0",
+    "content": "Here will be some conspiracy shit #DeepStateVirus #Qanon",
+    "happened_at": "2020-05-12T13:48:20+02:00",
+    "favourite_count": 10,
+    "retweet_count": 3,
+    "user": {
+      "user_id": "1068",
+      "screen_name": "kurt",
+      "name": "Kurt Schrader"
+    },
+    "hashtags": ["DeepStateVirus","Qanon"]
+  },
+  "tweet1":{
+    "tweet_id":"1251277268426645505",
+    "content":"Maybe?\r\n\r\nBOOM.\r\n  BOOM.\r\n    BOOM.\r\n      BOOM!!!!!\r\n\r\n2 year delta today. \r\n\r\n#Qanon https://t.co/vACpGXm1nH",
+    "happened_at":"2020-04-17T22:32:03+02:00",
+    "parent_id":"0",
+    "retweet_count":393,
+    "favorite_count":0,
+    "user":{
+      "user_id":1130572499408883712,
+      "name":"NotAlice1776🇺🇸 ⭐⭐⭐ @AwakenedOne on Parler",
+      "screen_name":"Notalice1776"
+    },
+    "hashtags":["Qanon"]}
+}
