@@ -1,0 +1,47 @@
+SELECT th.hashtag_id, th.tweet_id INTO conspiracy_tweet_hashtags
+FROM tweet_hashtags th WHERE th.hashtag_id in (SELECT id FROM all_conspiracy_hashtags) 
+
+
+SELECT cth.hashtag_id, cth.tweet_id, ach.value INTO conspiracy_tweet_hashtags_values
+FROM conspiracy_tweet_hashtags cth
+FULL JOIN all_conspiracy_hashtags ach on cth.hashtag_id = ach.id
+
+CREATE INDEX tweet_index ON conspiracy_tweet_hashtags_values (tweet_id)
+
+
+SELECT row_to_json(t) INTO conspiracy_tweets_json
+FROM (SELECT
+		ct.id as tweet_id,
+		ct.content as content,
+		ct.happened_at as happened_at,
+		ct.parent_id as parent_id,
+		ct.retweet_count as retweet_count,
+		ct.favorite_count as favorite_count,
+	  	(SELECT row_to_json(u)
+		 FROM (	SELECT
+					ca.id as user_id,
+					ca.name as name,
+					ca.screen_name as screen_name
+		  	  	FROM conspiracy_accounts ca 
+			   	WHERE ca.id = ct.author_id
+			  ) u
+		) as user,
+	  	(SELECT json_agg(h.value)
+		 FROM (	SELECT 
+			   		cthv.value	  	
+			  	FROM conspiracy_tweet_hashtags_values cthv 
+			  	WHERE cthv.tweet_id = ct.id
+			  ) h
+		) as hashtags	  	
+	  FROM conspiracy_tweets ct 	
+) t;
+
+
+
+
+-- 1260719332033781761 -tweet with 6 hashtags
+
+
+
+
+
