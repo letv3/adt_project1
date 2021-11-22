@@ -32,7 +32,9 @@ Dalej na miesto author_id som sa rozhodol pouzit vnoreny objekt "user",
 ktory by obsahoval najdolezitejsie user info a to _user_id, name a screen_name_. 
 Vyber tychto atributov bol inspirovany realnym vyhladom tweetov.
 
-![tweet](C:\Users\ollyt\PycharmProject\adt_project1\task4\img.png)
+![tweet](./img.png)
+
+
 
 Kde vidime ze pre zakladne zobrazovanie tweetu potrebujeme iba _name_ a _screen name_. Atribut
 _user_id_ musi byt aby sme vedieli jednoznacne a rychlo identifikovat pouzivatela. Teoreticky by sme vedieli 
