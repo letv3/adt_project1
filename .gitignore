@@ -3,3 +3,4 @@
 .docker-compose.yaml
 .data/tweets.backup
 .task2/img*
+.task4/datamodel/thoughts.txt

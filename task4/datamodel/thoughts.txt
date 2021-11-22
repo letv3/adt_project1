@@ -1,3 +1,6 @@
 user [some tweets up to 10 tweets]
 
 tweets [user, references on childs] - (but we dont have thi references, only for parrents)
+
+
+pymongo.MongoClient("mongodb+srv://lytyvn:lytvyn@conspiracydatabase.bfzzn.mongodb.net/conspiracydatabase?retryWrites=true&w=majority")
