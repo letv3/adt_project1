@@ -1205,6 +1205,193 @@ Updatlo tak isto sa iba dva shardy z troch existujucich.
 	}
 }
 ```
-Zapisem vsetky tweety do text suboru, a pridan `\n` pomocou python scriptu.
+Zapisem vsetky tweety do text suboru, v defaultno tvare json lines a pomocou python scriptu a parralel_bulk 
+nahram do indexu. Vyslom mi menej nez je v postgres, preto ze json.loads nechcel niektore objekty parsovat.
+```python
+import time
+import json
+from collections import deque
+bulk_size = 0
+start_time = time.time()
+
+def generate_bulk_object(json):
+      return{
+                "_index": "tweets",
+                "_id": json['tweet_id'],
+                "_source": json
+            }
+
+with open('d:/elasticbulks/tweets_all_singleline') as json_file:
+    json_tweets = []
+    count_not_parsed = 0
+    count_all = 0
+    for line in json_file:
+        try:
+            json_tweets.append(
+                generate_bulk_object(
+                    json.loads(line)))
+            count_all += 1
+        except json.JSONDecodeError:
+            count_not_parsed += 1
+        # if count_all == bulk_size:
+        #     res = helpers.bulk(elastic, json_tweets)
+        #     json_tweets = []
+print('----------------')
+print(f"all tweets in index: {count_all}")
+print(f"could not parse: {count_not_parsed}")
+print(f"time elapsed: {time.time() - start_time}")
+some = helpers.parallel_bulk(elastic, json_tweets, chunk_size=10000)
+deque(some, maxlen=0)
+```
+
+GET `localhost:9200/_cat/indices?v`
+```
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases Q33F6VbZQRWeJthpPVrMCw   1   1         42           22      103mb         51.5mb
+green  open   tweets           nXfKaIIsTAGFc6Lk1CsKIw   2   0    1957147            0    830.3mb        830.3mb
+```
+10. Query (Zatial negunguje)
+```json
+{
+	"query":{
+		"function_score":{
+			"query":{
+				"bool":{
+					"must":[
+						{"match":{
+							"author.name":{ 
+								"query":"gates s0ros vaccine micr0chip",
+								"operator": "OR",
+								"fuzziness": 5,
+								"analyzer": "custom_shingles",
+								"boost": 6
+							}
+						}},
+						{"match":{
+							"content":{ 
+								"query": "gates s0ros vaccine micr0chip",
+								"operator": "OR",
+								"fuzziness": 5,
+								"analyzer": "englando",
+								"boost": 8
+							}
+							
+						}},
+						{"match":{
+							"author.description":{ 
+								"query": "gates s0ros vaccine micr0chip",
+								"operator": "OR",
+								"fuzziness": 5,
+								"analyzer": "custom_shingles",
+								"boost": 6
+							}
+						}},
+						{"match":{
+							"author.screen_name": { 
+								"query":"gates s0ros vaccine micr0chip",
+								"operator": "OR",
+								"fuzziness": 5,
+								"analyzer": "custom_ngram",
+								"boost": 10
+							}
+						}}
+					],
+					"filter":[
+						{"range":{
+							"author.statuses_count":{ 
+								"gte":1000
+							}
+						}},
+						{"terms":{
+							"hashtags":{
+								"value": "qanon",
+								"fuzziness": 5
+							}
+						}}
+					]
+				}
+			}
+		}
+	}
+}
+
+```
+Tato funguje v pohode
+```json
+{
+
+	"query":{
+		"bool":{
+			"must":{
+				"match":{
+					"content":{ 
+						"query":"gates s0ros vaccine micr0chip",
+						"operator": "OR",
+						"fuzziness": 5,
+						"analyzer": "englando",
+						"boost": 6
+						
+					}
+				}
+			},
+			"filter":{
+				"term":{
+					"hashtags":{
+						"value": "qanon",
+						"case_insensitive": "true"  
+					}
+				}
+			}
+		}
+	}
+}
+```
+
+RESPONSE:
+```json
+ "took": 430,
+    "timed_out": false,
+    "_shards": {
+        "total": 2,
+        "successful": 2,
+        "skipped": 0,
+        "failed": 0
+    },
+    "hits": {
+        "total": {
+            "value": 10000,
+            "relation": "gte"
+        },
+        "max_score": 115.69053,
+        "hits": [
+            {
+                "_index": "tweets",
+                "_type": "_doc",
+                "_id": "1255510084316168193",
+                "_score": 115.69053,
+                "_source": {
+                    "tweet_id": "1255510084316168193",
+                    "content": "MUST READ - Bill Gates, Vaccinations, Microchips, And Patent 060606 https://t.co/3iF2BkQvbQ via @orientalreview #Qanon",
+                    "happened_at": "2020-04-29T14:51:45+02:00",
+                    "parent_id": null,
+                    "retweet_count": 2,
+                    "favorite_count": 0,
+                    "user": {
+                        "id": 2160060829,
+                        "screen_name": "Defcon1Mom",
+                        "name": "CrumbLovingDeplorable ⭐️⭐️⭐️",
+                        "description": "Christian, Wife, Mom, Trump supporter, realtor in Dallas Tx THE BEST IS YET TO COME 🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸🇺🇸",
+                        "followers_count": 1410,
+                        "friends_count": 1324,
+                        "statuses_count": 26894
+                    },
+                    "hashtags": [
+                        "Qanon"
+                    ]
+                }
+            }
+ ...
+```
+
 
 
