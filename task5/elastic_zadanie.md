@@ -1250,7 +1250,10 @@ health status index            uuid                   pri rep docs.count docs.de
 green  open   .geoip_databases Q33F6VbZQRWeJthpPVrMCw   1   1         42           22      103mb         51.5mb
 green  open   tweets           nXfKaIIsTAGFc6Lk1CsKIw   2   0    1957147            0    830.3mb        830.3mb
 ```
-10. Query (Zatial negunguje)
+10. Query
+
+Problem je v tom ze nehladaju sa dokumenty podla nested fieldov a nemam zaindexovany
+followers count (zle som vytvoril mapping, a uz nestiham to vsetko nanovo zaindexovat :( )
 ```json
 {
 	"query":{
@@ -1302,21 +1305,68 @@ green  open   tweets           nXfKaIIsTAGFc6Lk1CsKIw   2   0    1957147        
 								"gte":1000
 							}
 						}},
-						{"terms":{
+						{"term":{
 							"hashtags":{
 								"value": "qanon",
-								"fuzziness": 5
+								"case_insensitive": "true"
 							}
 						}}
 					]
 				}
-			}
+			},
+			"functions": [
+		        {
+		          "filter": { "range": { "retweet_count": {"gte": 100, "lte": 500} } },
+		          "weight": 6
+		        },
+		        {
+		          "filter": { "range": { "author.followers_count": {"gte": 100} } },
+		          "weight": 3
+		        }
+		      ]
 		}
 	}
 }
-
 ```
-Tato funguje v pohode
+RESPONSE:
+```json
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "query_shard_exception",
+                "reason": "failed to create query: Cannot search on field [retweet_count] since it is not indexed.",
+                "index_uuid": "nXfKaIIsTAGFc6Lk1CsKIw",
+                "index": "tweets"
+            }
+        ],
+        "type": "search_phase_execution_exception",
+        "reason": "all shards failed",
+        "phase": "query",
+        "grouped": true,
+        "failed_shards": [
+            {
+                "shard": 0,
+                "index": "tweets",
+                "node": "0CH1v9dNRca-V14iBGp4Ug",
+                "reason": {
+                    "type": "query_shard_exception",
+                    "reason": "failed to create query: Cannot search on field [retweet_count] since it is not indexed.",
+                    "index_uuid": "nXfKaIIsTAGFc6Lk1CsKIw",
+                    "index": "tweets",
+                    "caused_by": {
+                        "type": "illegal_argument_exception",
+                        "reason": "Cannot search on field [retweet_count] since it is not indexed."
+                    }
+                }
+            }
+        ]
+    },
+    "status": 400
+}
+```
+
+Tato funguje v pohode. 
 ```json
 {
 
