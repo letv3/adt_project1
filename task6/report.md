@@ -103,7 +103,8 @@ MATCH p = ((trump:Account{screen_name:"realDonaldTrump"})-
             [f:FOLLOWS*1..10]->
             (acc:Account)-
             [:FOLLOWS]->
-            (:Account{screen_name:'katyperry'}))
+            (kettyperry:Account{screen_name:'katyperry'}))
+WHERE trump<>acc and acc<>kettyperry 
 UNWIND p as paths
 WITH [x in nodes(paths) | x.screen_name] as node_names
 RETURN node_names
@@ -111,6 +112,17 @@ RETURN node_names
 ```
 RESULT:
 ![img_1.png](img_1.png)
+
+![img_8.png](img_8.png)
+
+Najkratsie Cesty od Trumpu do KattyPerry
+```
+MATCH p = allShortestPaths((trump:Account{screen_name:"realDonaldTrump"})-[:FOLLOWS*]->(:Account{screen_name:'katyperry'}))
+UNWIND p as paths
+RETURN paths
+```
+
+![img_7.png](img_7.png)
 
 4. Vyhľadajte neúspešné tweety influencerov. Vyhľadajte 10 najmenej retweetovanych tweetov
    od Accountov, ktoré sú na prvých 10 miestach v celkovom počte retweetov.
@@ -126,66 +138,65 @@ WITH influencer, less_popular_tweets, count(less_ret) as less_retweets
         ORDER BY less_retweets ASC LIMIT 10
 RETURN  influencer.screen_name, 
         influencer.id,
+        less_retweets,
         less_popular_tweets.author_id,
-        less_popular_tweets.content,
-        less_retweets
+        less_popular_tweets.content
 ```
 
 ```
-╒════════════════════════╤═══════════════╤═══════════════════════════════╤══════════════════════════════════════════════════════════════════════╤═══════════════╕
-│"influencer.screen_name"│"influencer.id"│"less_popular_tweets.author_id"│"less_popular_tweets.content"                                         │"less_retweets"│
-╞════════════════════════╪═══════════════╪═══════════════════════════════╪══════════════════════════════════════════════════════════════════════╪═══════════════╡
-│"ewarren"               │"357606935"    │"357606935"                    │"Last night, the federal evictions moratorium expired, and rent is due│1              │
-│                        │               │                               │ next week—the same week coronavirus unemployment benefits are set to │               │
-│                        │               │                               │end.\n
-This is a completely preventable crisis. Congress must act imme│               │
-│                        │               │                               │diately to extend these critical protections.
+╒════════════════════════╤═══════════════╤═══════════════╤═══════════════════════════════╤══════════════════════════════════════════════════════════════════════╕
+│"influencer.screen_name"│"influencer.id"│"less_retweets"│"less_popular_tweets.author_id"│"less_popular_tweets.content"                                         │
+╞════════════════════════╪═══════════════╪═══════════════╪═══════════════════════════════╪══════════════════════════════════════════════════════════════════════╡
+│"ewarren"               │"357606935"    │1              │"357606935"                    │"Last night, the federal evictions moratorium expired, and rent is due│
+│                        │               │               │                               │ next week—the same week coronavirus unemployment benefits are set to │
+│                        │               │               │                               │end.\n
+This is a completely preventable crisis. Congress must act imme│
+│                        │               │               │                               │diately to extend these critical protections.
 
-https://t.co/9gALMcbR3k│               │
-│                        │               │                               │"                                                                     │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"CarlosLoret"           │"68844197"     │"68844197"                     │"Este estudio en el @washingtonpost dice que para reabrir las universi│2              │
-│                        │               │                               │dades habría que hacer una prueba de Covid cada dos días a los alumnos│               │
-│                        │               │                               │ https://t.co/69T4wIguXG"                                             │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"replouiegohmert"       │"22055226"     │"22055226"                     │"Lots of #FakeNews going around about this https://t.co/OQhHYZJZvh"   │3              │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"ewarren"               │"357606935"    │"357606935"                    │"We know what we need to do to contain the virus and save lives and ou│3              │
-│                        │               │                               │r economy—but Republicans refuse to invest enough in widespread testin│               │
-│                        │               │                               │g and contact tracing.\n
-Trump and his Republican buddies don’t have w│               │
-│                        │               │                               │hat it takes to get us out of this crisis.
-https://t.co/1CDbH26bmu"   │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"CarlosLoret"           │"68844197"     │"68844197"                     │"Para morirse de envidia: cómo Francia está viviendo su nueva normalid│6              │
-│                        │               │                               │ad. Este articulista sale a restaurantes, va a conciertos y a centros │               │
-│                        │               │                               │comerciales. El truco: pruebas y rastreo de contactos. https://t.co/Xc│               │
-│                        │               │                               │VG6T7E0P"                                                             │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"ewarren"               │"357606935"    │"357606935"                    │"We need to make sure schools have all the resources they need to dete│10             │
-│                        │               │                               │rmine whether and how to safely reopen. Anything less is recklessly en│               │
-│                        │               │                               │dangering lives for political gain. \nhttps://t.co/XVwGQ7yRF4"        │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"CarlosLoret"           │"68844197"     │"68844197"                     │"688 fallecimientos documentados en 24 horas, ya son 46 mil 688 deceso│12             │
-│                        │               │                               │s por #Covid en #México. https://t.co/gh6x8hYCt2"                     │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"CarlosLoret"           │"68844197"     │"68844197"                     │"Murió Paco Valverde, un gran luchador por la naturaleza, valiente def│50             │
-│                        │               │                               │ensor de la Vaquita Marina. Hubo una enorme solidaridad para tratar de│               │
-│                        │               │                               │ salvarlo. Gracias a todos los que estuvieron pendientes. Descanse en │               │
-│                        │               │                               │Paz el buen pescador. Abrazo entrañable para Alan y toda su familia. h│               │
-│                        │               │                               │ttps://t.co/4nzviIbqto"                                               │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"maddieevelasco"        │"2887547117"   │"2887547117"                   │"2. You put employees at risk for getting sick. Yes we wear a mask, bu│54             │
-│                        │               │                               │t we are there to serve you and have families and friends we are afrai│               │
-│                        │               │                               │d to be around now because we don’t know how long ago we came in conta│               │
-│                        │               │                               │ct with someone or if we are infected until it’s too late."           │               │
-├────────────────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┼───────────────┤
-│"maddieevelasco"        │"2887547117"   │"2887547117"                   │"1. You put yourself at unnecessary risk of contracting covid-19. We s│66             │
-│                        │               │                               │anitize as often as we can, but you still take your mask off to eat ar│               │
-│                        │               │                               │ound strangers and you don’t know where they have been or who they hav│               │
-│                        │               │                               │e been in contact with."                                              │               │
-└────────────────────────┴───────────────┴───────────────────────────────┴──────────────────────────────────────────────────────────────────────┴───────────────┘
-
+https://t.co/9gALMcbR3k│
+│                        │               │               │                               │"                                                                     │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"CarlosLoret"           │"68844197"     │2              │"68844197"                     │"Este estudio en el @washingtonpost dice que para reabrir las universi│
+│                        │               │               │                               │dades habría que hacer una prueba de Covid cada dos días a los alumnos│
+│                        │               │               │                               │ https://t.co/69T4wIguXG"                                             │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"replouiegohmert"       │"22055226"     │3              │"22055226"                     │"Lots of #FakeNews going around about this https://t.co/OQhHYZJZvh"   │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"ewarren"               │"357606935"    │3              │"357606935"                    │"We know what we need to do to contain the virus and save lives and ou│
+│                        │               │               │                               │r economy—but Republicans refuse to invest enough in widespread testin│
+│                        │               │               │                               │g and contact tracing.\n
+Trump and his Republican buddies don’t have w│
+│                        │               │               │                               │hat it takes to get us out of this crisis.
+https://t.co/1CDbH26bmu"   │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"CarlosLoret"           │"68844197"     │6              │"68844197"                     │"Para morirse de envidia: cómo Francia está viviendo su nueva normalid│
+│                        │               │               │                               │ad. Este articulista sale a restaurantes, va a conciertos y a centros │
+│                        │               │               │                               │comerciales. El truco: pruebas y rastreo de contactos. https://t.co/Xc│
+│                        │               │               │                               │VG6T7E0P"                                                             │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"ewarren"               │"357606935"    │10             │"357606935"                    │"We need to make sure schools have all the resources they need to dete│
+│                        │               │               │                               │rmine whether and how to safely reopen. Anything less is recklessly en│
+│                        │               │               │                               │dangering lives for political gain. \nhttps://t.co/XVwGQ7yRF4"        │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"CarlosLoret"           │"68844197"     │12             │"68844197"                     │"688 fallecimientos documentados en 24 horas, ya son 46 mil 688 deceso│
+│                        │               │               │                               │s por #Covid en #México. https://t.co/gh6x8hYCt2"                     │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"CarlosLoret"           │"68844197"     │50             │"68844197"                     │"Murió Paco Valverde, un gran luchador por la naturaleza, valiente def│
+│                        │               │               │                               │ensor de la Vaquita Marina. Hubo una enorme solidaridad para tratar de│
+│                        │               │               │                               │ salvarlo. Gracias a todos los que estuvieron pendientes. Descanse en │
+│                        │               │               │                               │Paz el buen pescador. Abrazo entrañable para Alan y toda su familia. h│
+│                        │               │               │                               │ttps://t.co/4nzviIbqto"                                               │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"maddieevelasco"        │"2887547117"   │54             │"2887547117"                   │"2. You put employees at risk for getting sick. Yes we wear a mask, bu│
+│                        │               │               │                               │t we are there to serve you and have families and friends we are afrai│
+│                        │               │               │                               │d to be around now because we don’t know how long ago we came in conta│
+│                        │               │               │                               │ct with someone or if we are infected until it’s too late."           │
+├────────────────────────┼───────────────┼───────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"maddieevelasco"        │"2887547117"   │66             │"2887547117"                   │"1. You put yourself at unnecessary risk of contracting covid-19. We s│
+│                        │               │               │                               │anitize as often as we can, but you still take your mask off to eat ar│
+│                        │               │               │                               │ound strangers and you don’t know where they have been or who they hav│
+│                        │               │               │                               │e been in contact with."                                              │
+└────────────────────────┴───────────────┴───────────────┴───────────────────────────────┴──────────────────────────────────────────────────────────────────────┘
 ```
 OUTPUT as objects:
 
@@ -198,9 +209,9 @@ OUTPUT as objects:
 MATCH (trump:Account{screen_name:"realDonaldTrump"})-[:POSTS]->(trump_tweet:Tweet)<-[trump_ret:RETWEETS]-(:Tweet)
 WITH trump, trump_tweet, count(trump_ret) as retweets
         ORDER BY retweets DESC LIMIT 1
-CREATE (my_acc:Account{screen_name:"lytvynol", name: 'Oleksandr Lytvyn'})-[:POSTS]->(my_tweet:Tweet{content:"racist shit"}) 
-CREATE (my_acc)-[:FOLLOWS]->(trump)
-CREATE (my_tweet)-[:RETWEETS]->(trump_tweet)
+MERGE (my_acc:Account{screen_name:"lytvynol", name: 'Oleksandr Lytvyn'})-[:POSTS]->(my_tweet:Tweet{content:"racist shit"}) 
+MERGE (my_acc)-[:FOLLOWS]->(trump)
+MERGE (my_tweet)-[:RETWEETS]->(trump_tweet)
 return my_acc, my_tweet, trump, trump_tweet
 ```
 OUTPUT:
